@@ -24,7 +24,7 @@ export async function GET() {
   try {
     const response = await gmail.users.messages.list({
       userId: "me",
-      maxResults: 10,
+      maxResults: 100,
     });
 
     const messages = response.data.messages || [];
@@ -41,6 +41,7 @@ export async function GET() {
         const subject = headers?.find((h) => h.name === "Subject")?.value || "";
         const from = headers?.find((h) => h.name === "From")?.value || "";
         const date = headers?.find((h) => h.name === "Date")?.value || "";
+        const snippet = fullMessage.data.snippet || "";
 
         const parts = fullMessage.data.payload?.parts;
         let body = "";
@@ -66,16 +67,26 @@ export async function GET() {
           sender,
           email,
           subject,
-          preview: body.substring(0, 100),
           content: body,
           date,
+          snippet,
         };
       })
     );
 
     return NextResponse.json(fullMessages);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching emails:", error);
+
+    // Check for token expiration error
+    if (
+      error.code === 401 ||
+      error.message?.includes("invalid_grant") ||
+      error.message?.includes("Invalid Credentials")
+    ) {
+      return NextResponse.json({ error: "Token expired" }, { status: 401 });
+    }
+
     return NextResponse.json(
       { error: "Failed to fetch emails" },
       { status: 500 }

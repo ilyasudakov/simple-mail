@@ -5,14 +5,14 @@ import { formatRelativeDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 export interface Email {
   id: string;
   sender: string;
   email?: string;
   subject: string;
-  preview: string;
+  snippet: string;
   content: string;
   date: string;
 }
@@ -24,7 +24,7 @@ export default function EmailList({
   onSelectEmail?: (email: Email) => void;
   selectedEmail?: Email;
 }) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +37,24 @@ export default function EmailList({
 
       try {
         const response = await fetch("/api/emails");
+        if (response.status === 401) {
+          // Token might be expired, try to refresh the session
+          const updatedSession = await updateSession();
+          if (!updatedSession) {
+            // If session update fails, sign out the user
+            await signOut();
+            return;
+          }
+          // Retry the fetch with new token
+          const retryResponse = await fetch("/api/emails");
+          if (!retryResponse.ok) {
+            throw new Error("Failed to fetch emails after token refresh");
+          }
+          const messages = await retryResponse.json();
+          setEmails(messages);
+          return;
+        }
+
         if (!response.ok) {
           throw new Error("Failed to fetch emails");
         }
@@ -50,7 +68,7 @@ export default function EmailList({
     }
 
     fetchEmails();
-  }, [session, status]);
+  }, [session, status, updateSession]);
 
   if (status === "loading" || loading) {
     return <div className="p-4">Loading emails...</div>;
@@ -99,7 +117,7 @@ function EmailItem({
   sender,
   email,
   subject,
-  preview,
+  snippet,
   date,
   onClick,
   isSelected,
@@ -107,7 +125,7 @@ function EmailItem({
   sender: string;
   email?: string;
   subject: string;
-  preview: string;
+  snippet: string;
   date: string;
   onClick?: () => void;
   isSelected?: boolean;
@@ -129,7 +147,7 @@ function EmailItem({
               </time>
             </div>
             <div className="truncate">{subject}</div>
-            <p className="text-xs text-muted-foreground truncate">{preview}</p>
+            <p className="text-xs text-muted-foreground truncate">{snippet}</p>
           </div>
         </div>
       </div>

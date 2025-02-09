@@ -1,4 +1,5 @@
 import { formatRelativeDate } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 export default function EmailView({
   sender,
@@ -20,7 +21,7 @@ export default function EmailView({
   return (
     <div className="flex h-full flex-col">
       <div className="border-b p-4">
-        <div className="space-y-3">
+        <div className="space-y-3 max-w-[720px]">
           <div>
             <span className="font-bold">From: </span>
             {sender}{" "}
@@ -40,9 +41,17 @@ export default function EmailView({
       </div>
 
       <div className="flex-1 p-4">
-        <div className="prose prose-sm max-w-none dark:prose-invert">
+        <div className="prose prose-sm dark:prose-invert max-w-[720px]">
           {content}
         </div>
+      </div>
+      <div className="flex-1 border-t px-4 py-2 space-x-4">
+        <Button variant="link" size="sm" className="px-0 underline">
+          Reply
+        </Button>
+        <Button variant="link" size="sm" className="px-0 underline">
+          Forward
+        </Button>
       </div>
     </div>
   );
