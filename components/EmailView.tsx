@@ -41,11 +41,11 @@ export default function EmailView({
       </div>
 
       <div className="flex-1 p-4">
-        <div className="prose prose-sm dark:prose-invert max-w-[720px]">
+        <pre className="whitespace-pre-wrap font-sans max-w-[720px] leading-relaxed">
           {content}
-        </div>
+        </pre>
       </div>
-      <div className="flex-1 border-t px-4 py-2 space-x-4">
+      <div className="border-t px-4 py-2 space-x-4">
         <Button variant="link" size="sm" className="px-0 underline">
           Reply
         </Button>

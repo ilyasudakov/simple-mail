@@ -25,6 +25,7 @@ export async function GET() {
     const response = await gmail.users.messages.list({
       userId: "me",
       maxResults: 100,
+      labelIds: ["INBOX"],
     });
 
     const messages = response.data.messages || [];
@@ -46,12 +47,27 @@ export async function GET() {
         const parts = fullMessage.data.payload?.parts;
         let body = "";
 
-        if (parts) {
-          const textPart = parts.find((part) => part.mimeType === "text/plain");
-          if (textPart?.body?.data) {
-            body = Buffer.from(textPart.body.data, "base64").toString();
+        function findPlainTextContent(parts: any[]): string {
+          let plainContent = "";
+
+          for (const part of parts) {
+            if (part.mimeType === "text/plain" && part.body?.data) {
+              return Buffer.from(part.body.data, "base64").toString();
+            } else if (part.parts) {
+              const nestedContent = findPlainTextContent(part.parts);
+              if (nestedContent) return nestedContent;
+            }
           }
-        } else if (fullMessage.data.payload?.body?.data) {
+
+          return plainContent;
+        }
+
+        if (parts) {
+          body = findPlainTextContent(parts);
+        }
+
+        // Fallback to body data if no plain text found in parts
+        if (!body && fullMessage.data.payload?.body?.data) {
           body = Buffer.from(
             fullMessage.data.payload.body.data,
             "base64"

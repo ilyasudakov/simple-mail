@@ -12,11 +12,24 @@ export function Sidebar() {
   const { data: session } = useSession();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Load saved state after mount
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    if (saved !== null) {
+      setIsCollapsed(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key.toLowerCase() === "b") {
         event.preventDefault();
-        setIsCollapsed((prev) => !prev);
+        setIsCollapsed((prev: boolean) => !prev);
       }
     };
 
@@ -46,7 +59,7 @@ export function Sidebar() {
         </div>
         <nav className="space-y-1 p-2 flex-1">
           <Button
-            variant="ghost"
+            variant="secondary"
             className={cn("w-full justify-start gap-2", isCollapsed && "px-3")}
             asChild
           >
