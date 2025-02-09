@@ -81,22 +81,24 @@ function EmailItem({
 }) {
   return (
     <button
-      className={`block w-full text-left p-4 hover:bg-muted/50 cursor-pointer ${
+      className={`block w-full text-left px-4 py-2 hover:bg-muted/50 cursor-pointer ${
         isSelected ? "bg-muted/50" : ""
       }`}
       onClick={onClick}
     >
       <div className="flex flex-col gap-1">
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="truncate">{sender}</div>
+          <div className="w-full flex-1">
+            <div className="flex items-center justify-between">
+              <div className="truncate">{sender}</div>
+              <time className="text-xs text-muted-foreground whitespace-nowrap">
+                {formatRelativeDate(date)}
+              </time>
+            </div>
             <div className="truncate">{subject}</div>
+            <p className="text-xs text-muted-foreground truncate">{preview}</p>
           </div>
-          <time className="text-sm text-muted-foreground whitespace-nowrap">
-            {formatRelativeDate(date)}
-          </time>
         </div>
-        <p className="text-sm text-muted-foreground truncate">{preview}</p>
       </div>
     </button>
   );
