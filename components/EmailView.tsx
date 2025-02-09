@@ -7,12 +7,16 @@ export default function EmailView({
   content,
   date,
 }: {
-  sender: string;
+  sender?: string;
   email?: string;
-  subject: string;
-  content: string;
-  date: string;
+  subject?: string;
+  content?: string;
+  date?: string;
 }) {
+  if (!sender || !subject || !content || !date) {
+    return <div className="p-4">Select an email to view</div>;
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b p-4">

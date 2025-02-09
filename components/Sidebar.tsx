@@ -21,7 +21,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex flex-col h-full">
-        <div className="px-4 py-2 flex">
+        <div className={cn("px-4 py-2 flex", isCollapsed && "px-3")}>
           <Button
             variant="ghost"
             size="icon"
@@ -105,9 +105,9 @@ export function Sidebar() {
                 )}{" "}
               </div>
               <Button
-                variant="ghost"
+                variant="outline"
                 className={cn(
-                  "w-full justify-start",
+                  "w-full justify-center",
                   isCollapsed && "px-2 w-auto"
                 )}
                 onClick={() => signOut()}

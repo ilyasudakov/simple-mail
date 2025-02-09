@@ -2,63 +2,96 @@
 
 import { Card } from "@/components/ui/card";
 import { formatRelativeDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+
+export interface Email {
+  id: string;
+  sender: string;
+  email?: string;
+  subject: string;
+  preview: string;
+  content: string;
+  date: string;
+}
 
 export default function EmailList({
   onSelectEmail,
   selectedEmail,
 }: {
-  onSelectEmail?: (email: any) => void;
-  selectedEmail?: any;
+  onSelectEmail?: (email: Email) => void;
+  selectedEmail?: Email;
 }) {
-  const emails = [
-    {
-      sender: "Freedom Broker",
-      email: "news@ffin.kz",
-      subject: "Update of the Regulations of the Company",
-      preview:
-        "On February 7, 2025, amendments to the Annex 6 to the Regulations on...",
-      content: `On February 7, 2025, amendments to the Annex 6 to the Regulations on Provision of Brokerage (Agency) Services on the Securities Market of Freedom Finance Global PLC will come into force. The main changes are related to increase of interest rate on overnight REPO transactions in the Kazakhstani tenge (KZT) currency to 15% per annum.
+  const { data: session, status } = useSession();
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-Updated documents are available on the website: https://ffin.global/en
+  useEffect(() => {
+    async function fetchEmails() {
+      if (status !== "authenticated" || !session) {
+        return;
+      }
 
-If you have any questions, please contact your personal manager or call 7555 (from mobile phones in Kazakhstan). Number for calls from abroad: +7 7172 67 77 55
+      try {
+        const response = await fetch("/api/emails");
+        if (!response.ok) {
+          throw new Error("Failed to fetch emails");
+        }
+        const messages = await response.json();
+        setEmails(messages);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch emails");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-Best Regards,
-Public company Freedom Finance Global PLC`,
-      date: "Thu, 6 Feb 2025 09:58:10",
-    },
-    {
-      sender: "Wellfound",
-      subject: "Are cover letters worth it?",
-      preview:
-        "Leadership in a remote-first company requires clear communication and...",
-      content:
-        "Leadership in a remote-first company requires clear communication and strong organizational skills...",
-      date: "Thu, 6 Feb 2025 09:45:00",
-    },
-    {
-      sender: "hh.ru",
-      subject: "3 новые схемы мошенничества",
-      preview:
-        "Мошенники придумали 3 новые схемы обмана с использованием им...",
-      content:
-        "Мошенники придумали 3 новые схемы обмана с использованием имитации сайтов по поиску работы...",
-      date: "Thu, 6 Feb 2025 09:30:00",
-    },
-  ];
+    fetchEmails();
+  }, [session, status]);
+
+  if (status === "loading" || loading) {
+    return <div className="p-4">Loading emails...</div>;
+  }
+
+  if (status === "unauthenticated") {
+    return <div className="p-4">Please sign in to view your emails</div>;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {error}</div>;
+  }
 
   return (
-    <div className="flex flex-col">
-      {emails.map((email, index) => (
-        <div key={index} className="border-b last:border-b-0">
-          <EmailItem
-            {...email}
-            onClick={() => onSelectEmail?.(email)}
-            isSelected={selectedEmail?.date === email.date}
-          />
+    <>
+      <header className="flex items-center justify-between border-b px-4 py-4">
+        <h1 className="text-xl font-semibold">Inbox</h1>
+        <div className="space-x-2">
+          <Button variant="link" size="sm" className="px-0 underline">
+            Select all
+          </Button>
+          <Button variant="link" size="sm" className="px-0 underline">
+            Mark as read
+          </Button>
         </div>
-      ))}
-    </div>
+      </header>
+
+      <ScrollArea className="flex h-[calc(100vh-65px)]">
+        <div className="flex flex-col">
+          {emails.map((email) => (
+            <div key={email.id} className="border-b last:border-b-0">
+              <EmailItem
+                {...email}
+                onClick={() => onSelectEmail?.(email)}
+                isSelected={selectedEmail?.id === email.id}
+              />
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </>
   );
 }
 
